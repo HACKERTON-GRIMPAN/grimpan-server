@@ -1,5 +1,6 @@
 package com.grimpan.drawingdiary.controller;
 
+import com.grimpan.drawingdiary.dto.DiaryResponse;
 import com.grimpan.drawingdiary.dto.DiaryWriteRequest;
 import com.grimpan.drawingdiary.dto.DiaryWriteResponse;
 import com.grimpan.drawingdiary.service.DiaryService;
@@ -10,15 +11,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RestController;
 
 
+@Api(tags = "일기 API)")
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/diary")
-@Slf4j
-@Api(tags = "일기 API")
-@RequiredArgsConstructor
 public class DiaryController {
     private final DiaryService diaryService;
 
@@ -28,5 +27,12 @@ public class DiaryController {
         DiaryWriteResponse response = diaryService.create(request);
         return ResponseEntity.ok()
                 .body(response);
+    }
+
+    @Operation(summary = "일기 상세 조회", description = "id로 일기 상세 조회")
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<DiaryResponse> getOneDiary(@PathVariable Long id) {
+        DiaryResponse response = diaryService.getOneDiary(id);
+        return ResponseEntity.ok().body(response);
     }
 }
