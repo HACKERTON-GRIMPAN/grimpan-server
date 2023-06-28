@@ -1,5 +1,6 @@
 package com.grimpan.drawingdiary.controller;
 
+import com.grimpan.drawingdiary.dto.DiaryResponse;
 import com.grimpan.drawingdiary.dto.DiaryWriteRequest;
 import com.grimpan.drawingdiary.dto.DiaryWriteResponse;
 import com.grimpan.drawingdiary.service.DiaryService;
@@ -7,10 +8,7 @@ import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @Api(tags = "사례일 전시(캘린더)")
@@ -26,5 +24,12 @@ public class DiaryController {
         DiaryWriteResponse response = diaryService.create(request);
         return ResponseEntity.ok()
                 .body(response);
+    }
+
+    @Operation(summary = "일기 상세 조회", description = "id로 일기 상세 조회")
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<DiaryResponse> getOneDiary(@PathVariable Long id) {
+        DiaryResponse response = diaryService.getOneDiary(id);
+        return ResponseEntity.ok().body(response);
     }
 }
