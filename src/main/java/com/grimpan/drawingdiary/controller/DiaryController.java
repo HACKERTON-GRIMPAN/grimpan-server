@@ -63,8 +63,15 @@ public class DiaryController {
 
     @Operation(summary = "이미지 해당 달 조회", description = "현재 달에 해당하는 이미지 List 보여주기")
     @GetMapping(value = "/imageMonth")
-    public ResponseEntity<?> chooseImage() throws IOException {
-        Map<Integer, DiaryResponse> diaryMap = diaryService.getImageListByMonth();
+    public ResponseEntity<?> getImageListForMonth() throws IOException {
+        List<Map<Integer, DiaryResponse>> diaryMap = diaryService.getImageListByMonth();
+        return ResponseEntity.ok().body(diaryMap);
+    }
+
+    @Operation(summary = "해당 주 감정 점수 조회", description = "현재 주에 해당하는 감정 점수 보여주기")
+    @GetMapping(value = "/scoreWeek")
+    public ResponseEntity<?> getScoreListForWeek() throws IOException {
+        List<Map<Integer, Integer>> diaryMap = diaryService.getScoreListForWeek();
         return ResponseEntity.ok().body(diaryMap);
     }
 }

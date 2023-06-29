@@ -1,7 +1,6 @@
 package com.grimpan.drawingdiary.service;
 
 import com.grimpan.drawingdiary.domain.Diary;
-import com.grimpan.drawingdiary.domain.User;
 import com.grimpan.drawingdiary.dto.*;
 import com.grimpan.drawingdiary.exception.DiaryException;
 import com.grimpan.drawingdiary.exception.ErrorCode;
@@ -18,13 +17,11 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.sql.Timestamp;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.List;
 
@@ -108,15 +105,12 @@ public class DiaryService {
         return baos.toByteArray();
     }
 
-    public Map<Integer, DiaryResponse> getImageListByMonth() {
-        // 현재 날짜를 가져옵니다.
+    public List<Map<Integer, DiaryResponse>> getImageListByMonth() {
         LocalDate currentDate = LocalDate.now();
 
-        // 원하는 달을 설정합니다.
         int year = currentDate.getYear();  // 현재 연도
         int month = currentDate.getMonthValue();  // 현재 월
 
-        // YearMonth 객체를 생성하여 해당 달의 시작 날짜와 마지막 날짜를 가져옵니다.
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate firstDay = yearMonth.atDay(1);  // 시작 날짜
         LocalDate lastDay = yearMonth.atEndOfMonth();  // 마지막 날짜
@@ -127,18 +121,63 @@ public class DiaryService {
         List<Diary> diaryList = diaryRepository.findForMonthList(new Timestamp(startDate.getTime()),
                 new Timestamp(endDate.getTime()));
 
-        Map<Integer, DiaryResponse> diaryMap = new HashMap<>();
-        for (int i = 1; i <= lastDay.getDayOfMonth(); i++)
-            diaryMap.put(i, null);
-        for (Diary diary : diaryList) {
-            diaryMap.put(diary.getCreatedDate().toLocalDateTime().getDayOfMonth(),
-                    DiaryResponse.builder()
-                            .id(diary.getId())
-                            .title(diary.getTitle())
-                            .urlPath(urlPath + "diary/images?uuid=" + diary.getArtName())
-                            .content(diary.getContent()).build());
+        List<Map<Integer, DiaryResponse>> responseList = new ArrayList<>();
+        for (int i = 1; i <= lastDay.getDayOfMonth(); i++) {
+            Map<Integer, DiaryResponse> map = new HashMap<>();
+            map.put(i, null);
+            responseList.add(map);
         }
 
-        return diaryMap;
+        for (Diary diary : diaryList) {
+            Map<Integer, DiaryResponse> map = new HashMap<>();
+            map.put(diary.getCreatedDate().toLocalDateTime().getDayOfMonth(),
+                    DiaryResponse.builder()
+                    .id(diary.getId())
+                    .title(diary.getTitle())
+                    .urlPath(urlPath + "diary/images?uuid=" + diary.getArtName())
+                    .content(diary.getContent()).build());
+            responseList.set(diary.getCreatedDate().toLocalDateTime().getDayOfMonth(), map);
+        }
+
+        return responseList;
+    }
+
+    public List<Map<Integer, Integer>> getScoreListForWeek() {
+        LocalDate currentDate = LocalDate.now();
+
+        // 현재 날짜에서 제일 가까운 일요일
+        LocalDate firstDay = currentDate.with(DayOfWeek.SUNDAY);
+        // 현재 날짜에서 제일 가까운 토요일
+        LocalDate lastDay = currentDate.with(DayOfWeek.SATURDAY);
+        
+        if (!lastDay.isAfter(firstDay)) {
+            firstDay = lastDay.minusDays(6);
+        } else {
+            lastDay = firstDay.plusDays(6);
+        }
+
+        Date startDate = java.sql.Date.valueOf(firstDay);
+        Date endDate = java.sql.Date.valueOf(lastDay);
+
+        List<Diary> diaryList = diaryRepository.findForMonthList(new Timestamp(startDate.getTime()),
+                new Timestamp(endDate.getTime()));
+
+        List<Map<Integer, Integer>> responseList = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            Map<Integer, Integer> map = new HashMap<>();
+            map.put(i, null);
+            responseList.add(map);
+        }
+
+        for (Diary diary : diaryList) {
+            int index = diary.getCreatedDate().toLocalDateTime().getDayOfMonth() - firstDay.getDayOfMonth();
+
+            Map<Integer, Integer> map = new HashMap<>();
+            map.put(index, diary.getEmotionScore().intValue());
+
+            responseList.set(index, map);
+        }
+
+        return responseList;
     }
 }
