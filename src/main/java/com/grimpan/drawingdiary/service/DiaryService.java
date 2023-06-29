@@ -8,7 +8,7 @@ import com.grimpan.drawingdiary.dto.ImageResponse;
 import com.grimpan.drawingdiary.exception.DiaryException;
 import com.grimpan.drawingdiary.exception.ErrorCode;
 import com.grimpan.drawingdiary.repository.DiaryRepository;
-import com.grimpan.drawingdiary.unit.DiaryToImageUnit;
+import com.grimpan.drawingdiary.unit.DiaryUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,7 +28,7 @@ public class DiaryService {
     @Value("${spring.image.path}")
     private String imagePath;
     private final DiaryRepository diaryRepository;
-    private final DiaryToImageUnit diaryToImageUnit;
+    private final DiaryUnit diaryUnit;
 
     @Transactional
     public DiaryWriteResponse create(DiaryWriteRequest request) throws IOException {
@@ -54,9 +54,10 @@ public class DiaryService {
 
     //이미지 생성
     private List<String> makeImageWithAI(String content){
-        String firstTokens = diaryToImageUnit.getFirstTokens(content);
-        String secondTokens = diaryToImageUnit.getSecondTokens(firstTokens);
-        return diaryToImageUnit.getImgNameList(secondTokens);
+        String englishContent = diaryUnit.changeLanguage(content);
+        String firstTokens = diaryUnit.getFirstTokens(englishContent);
+        String secondTokens = diaryUnit.getSecondTokens(firstTokens);
+        return diaryUnit.getImgNameList(secondTokens);
     }
 
     private byte[] readImageFile(String filePath) throws IOException {
