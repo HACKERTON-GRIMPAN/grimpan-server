@@ -22,6 +22,8 @@ public class Diary {
     @Column(name = "id")
     private Long id;
 
+    private String title;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
@@ -39,11 +41,12 @@ public class Diary {
     private Timestamp createdDate;
 
     @Builder
-    public Diary(User user, String artName, String content, String keywords) {
+    public Diary(User user, String artName, String content, String keywords, String title) {
         this.user = user;
         this.artName = artName;
         this.content = content;
         this.keywords = keywords;
         this.createdDate = Timestamp.valueOf(LocalDateTime.now());
+        this.title = title;
     }
 }
