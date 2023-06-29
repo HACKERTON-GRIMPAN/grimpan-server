@@ -12,6 +12,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -94,12 +98,24 @@ public class DiaryService {
         return new DiaryResponse(diary.getId(), diary.getTitle(), imageUrlPath, diary.getContent());
     }
 
-    public byte[] downloadImage(String UuidName) throws IOException {
+    public byte[] downloadImage(String UuidName, Integer size) throws IOException {
         String filePath = imagePath;
 
         filePath = imagePath + UuidName;
 
-        byte[] images = Files.readAllBytes(new File(filePath).toPath());
-        return images;
+        BufferedImage inputImage = ImageIO.read(new File(filePath));
+
+        BufferedImage outputImage = new BufferedImage(size, size, inputImage.getType());
+
+        Graphics2D graphics2D = outputImage.createGraphics();
+        graphics2D.drawImage(inputImage, 0, 0, size, size, null);
+        graphics2D.dispose();
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(outputImage, "png", baos);
+        baos.flush();
+
+//        byte[] images = Files.readAllBytes(new File(filePath).toPath());
+        return baos.toByteArray();
     }
 }

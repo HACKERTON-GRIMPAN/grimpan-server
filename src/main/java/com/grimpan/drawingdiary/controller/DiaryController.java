@@ -48,8 +48,8 @@ public class DiaryController {
 
     @Operation(summary = "이미지 다운로드", description = "해당 UUID를 가진 이미지 보여주기")
     @GetMapping(value = "/images")
-    public ResponseEntity<?> downloadImage(@RequestParam("uuid") String fileName) throws Exception {
-        byte[] imageData = diaryService.downloadImage(fileName);
+    public ResponseEntity<?> downloadImage(@RequestParam("uuid") String fileName, @RequestParam("size") Integer size) throws Exception {
+        byte[] imageData = diaryService.downloadImage(fileName, size);
 
         if (imageData.length == 0)
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
