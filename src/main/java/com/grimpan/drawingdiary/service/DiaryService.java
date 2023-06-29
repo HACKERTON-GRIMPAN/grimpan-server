@@ -1,14 +1,13 @@
 package com.grimpan.drawingdiary.service;
 
 import com.grimpan.drawingdiary.domain.Diary;
-import com.grimpan.drawingdiary.dto.DiaryResponse;
-import com.grimpan.drawingdiary.dto.DiaryWriteRequest;
-import com.grimpan.drawingdiary.dto.ImageResponse;
+import com.grimpan.drawingdiary.dto.*;
 import com.grimpan.drawingdiary.exception.DiaryException;
 import com.grimpan.drawingdiary.exception.ErrorCode;
 import com.grimpan.drawingdiary.repository.DiaryRepository;
 import com.grimpan.drawingdiary.unit.DiaryUnit;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +20,7 @@ import java.util.Base64;
 import java.util.List;
 
 @RequiredArgsConstructor
+@Slf4j
 @Service
 public class DiaryService {
 
@@ -30,13 +30,13 @@ public class DiaryService {
     private final DiaryUnit diaryUnit;
 
     @Transactional
-    public List<ImageResponse> create(DiaryWriteRequest request) throws IOException {
+    public DiaryWriteResponse create(DiaryWriteRequest request) throws IOException {
         Diary diary = Diary.builder()
                 .content(request.getContent())
                 .title(request.getTitle()).build();
-        diaryRepository.save(diary);
+        Diary saved = diaryRepository.save(diary);
         List<String> imgNameList = makeImageWithAI(request.getContent());
-        return ImageToBase64(imgNameList);
+        return new DiaryWriteResponse(saved.getId(),ImageToBase64(imgNameList));
     }
 
     public List<ImageResponse> ImageToBase64(List<String> imgNameList) throws IOException {
@@ -76,12 +76,32 @@ public class DiaryService {
     }
 
     @Transactional
-    public void chooseImage(String imageName) {
-        File[] files = new File(imagePath).listFiles();
-        for(File f: files){
-            if(!f.getName().equals(imageName)){
-                f.delete();
+    public DiaryResponse chooseImage(Long id, List<ImageChooseRequest> requestList) {
+        String selectedImage = "";
+        for(ImageChooseRequest request : requestList){
+            if(!request.getIsSelected().booleanValue()){
+                String imageFullPath = imagePath + request.getArtName();
+                File file = new File(imageFullPath);
+                if(file.delete()){
+                    log.info(imageFullPath +"가 삭제되었습니다.");
+                }
+            }else{
+                selectedImage = request.getArtName();
             }
         }
+
+        //선택된 이미지와 관련 일기 리턴
+        String imageFullPath = imagePath + selectedImage;
+        byte[] imageByte = new byte[0];
+        try {
+            imageByte = readImageFile(imageFullPath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        String base64Data = Base64.getEncoder().encodeToString(imageByte);
+
+        Diary diary = diaryRepository.findById(id).orElseThrow(() -> new DiaryException(ErrorCode.DIARY_NOT_FOUND));
+        diary.setArtName(selectedImage);
+        return new DiaryResponse(diary.getId(), diary.getTitle(),base64Data, diary.getContent());
     }
 }
