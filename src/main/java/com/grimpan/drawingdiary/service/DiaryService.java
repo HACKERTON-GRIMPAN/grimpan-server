@@ -1,15 +1,13 @@
 package com.grimpan.drawingdiary.service;
 
 import com.grimpan.drawingdiary.domain.Diary;
-import com.grimpan.drawingdiary.dto.DiaryResponse;
-import com.grimpan.drawingdiary.dto.DiaryWriteRequest;
-import com.grimpan.drawingdiary.dto.DiaryWriteResponse;
-import com.grimpan.drawingdiary.dto.ImageResponse;
+import com.grimpan.drawingdiary.dto.*;
 import com.grimpan.drawingdiary.exception.DiaryException;
 import com.grimpan.drawingdiary.exception.ErrorCode;
 import com.grimpan.drawingdiary.repository.DiaryRepository;
 import com.grimpan.drawingdiary.unit.DiaryUnit;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +20,7 @@ import java.util.Base64;
 import java.util.List;
 
 @RequiredArgsConstructor
+@Slf4j
 @Service
 public class DiaryService {
 
@@ -77,19 +76,26 @@ public class DiaryService {
     }
 
     @Transactional
-    public DiaryResponse chooseImage(Long id, String imageName) throws IOException {
-        File[] files = new File(imagePath).listFiles();
-        for(File f: files){
-            if(!f.getName().equals(imageName)){
-                f.delete();
+    public DiaryResponse chooseImage(Long id, List<ImageChooseRequest> requestList) throws IOException {
+        String selectedImage = "";
+        for(ImageChooseRequest request : requestList){
+            if(!request.isSelected()){
+                String imageFullPath = imagePath + request.getArtName();
+                File file = new File(imageFullPath);
+                if(file.delete()){
+                    log.info(imageFullPath +"가 삭제되었습니다.");
+                }
+            }else{
+                selectedImage = request.getArtName();
             }
         }
-        String imageFullPath = imagePath + imageName;
+
+        String imageFullPath = imagePath + selectedImage;
         byte[] imageByte = readImageFile(imageFullPath);
         String base64Data = Base64.getEncoder().encodeToString(imageByte);
 
         Diary diary = diaryRepository.findById(id).orElseThrow(() -> new DiaryException(ErrorCode.DIARY_NOT_FOUND));
-        diary.setArtName(imageName);
+        diary.setArtName(selectedImage);
         return new DiaryResponse(diary.getId(), diary.getTitle(),base64Data, diary.getContent());
     }
 }

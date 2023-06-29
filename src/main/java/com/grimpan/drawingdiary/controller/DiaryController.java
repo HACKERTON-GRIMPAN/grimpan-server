@@ -3,6 +3,7 @@ package com.grimpan.drawingdiary.controller;
 import com.grimpan.drawingdiary.dto.DiaryResponse;
 import com.grimpan.drawingdiary.dto.DiaryWriteRequest;
 import com.grimpan.drawingdiary.dto.DiaryWriteResponse;
+import com.grimpan.drawingdiary.dto.ImageChooseRequest;
 import com.grimpan.drawingdiary.service.DiaryService;
 import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 
 @Api(tags = "일기 API")
@@ -36,9 +38,9 @@ public class DiaryController {
     }
 
     @Operation(summary = "이미지 선택", description = "4개의 이미지 중 사용자가 선택한 이미지만 남기기")
-    @GetMapping(value = "/{id}/images/{imageName}")
-    public ResponseEntity<DiaryResponse> chooseImage(@PathVariable Long id, @PathVariable String imageName) throws IOException {
-        DiaryResponse response = diaryService.chooseImage(id, imageName);
+    @GetMapping(value = "/{id}/images")
+    public ResponseEntity<DiaryResponse> chooseImage(@PathVariable Long id, @RequestBody List<ImageChooseRequest> requestList) throws IOException {
+        DiaryResponse response = diaryService.chooseImage(id, requestList);
         return ResponseEntity.ok().body(response);
     }
 }
