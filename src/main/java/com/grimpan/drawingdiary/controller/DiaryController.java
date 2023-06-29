@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 
 @Api(tags = "일기 API")
@@ -58,5 +59,12 @@ public class DiaryController {
             return ResponseEntity.status(HttpStatus.OK)
                     .contentType(MediaType.valueOf("image/png"))
                     .body(imageData);
+    }
+
+    @Operation(summary = "이미지 해당 달 조회", description = "현재 달에 해당하는 이미지 List 보여주기")
+    @GetMapping(value = "/imageMonth")
+    public ResponseEntity<?> chooseImage() throws IOException {
+        Map<Integer, DiaryResponse> diaryMap = diaryService.getImageListByMonth();
+        return ResponseEntity.ok().body(diaryMap);
     }
 }

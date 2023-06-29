@@ -38,16 +38,20 @@ public class Diary {
     @Column(name = "keywords")
     private String keywords;
 
+    @Column(name = "emotion_score")
+    private Long emotionScore;
+
     @Column(name = "created_date")
     private Timestamp createdDate;
 
     @Builder
-    public Diary(User user, String artName, String content, String keywords, String title) {
+    public Diary(User user, String artName, String content, String keywords, String title, Long emotionScore) {
         this.user = user;
         this.artName = artName;
+        this.title = title;
         this.content = content;
         this.keywords = keywords;
-        this.createdDate = Timestamp.valueOf(LocalDateTime.now());
-        this.title = title;
+        this.emotionScore = emotionScore;
+        this.createdDate = Timestamp.valueOf(LocalDateTime.now().plusHours(9));
     }
 }

@@ -95,7 +95,7 @@ public class DiaryUnit {
         return imgNames;
     }
 
-    public Integer getEmotionScore(String content) {
+    public Long getEmotionScore(String content) {
         headers.clear();
         headers.add("Content-type","application/json; charset=utf-8");
         headers.add("Authorization", "Bearer "+ GPT_KEY);
@@ -121,6 +121,6 @@ public class DiaryUnit {
         );
 
         JsonArray choices = (JsonArray) JsonParser.parseString(Objects.requireNonNull(response.getBody())).getAsJsonObject().get("choices");
-        return choices.get(0).getAsJsonObject().get("message").getAsJsonObject().get("content").getAsInt();
+        return (long) choices.get(0).getAsJsonObject().get("message").getAsJsonObject().get("content").getAsInt();
     }
 }

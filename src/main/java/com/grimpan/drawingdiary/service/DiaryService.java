@@ -1,6 +1,7 @@
 package com.grimpan.drawingdiary.service;
 
 import com.grimpan.drawingdiary.domain.Diary;
+import com.grimpan.drawingdiary.domain.User;
 import com.grimpan.drawingdiary.dto.*;
 import com.grimpan.drawingdiary.exception.DiaryException;
 import com.grimpan.drawingdiary.exception.ErrorCode;
@@ -20,8 +21,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Base64;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
+import java.util.*;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -37,12 +41,15 @@ public class DiaryService {
 
     @Transactional
     public DiaryWriteResponse create(DiaryWriteRequest request) throws IOException {
-        Diary diary = Diary.builder()
+        String keywords = diaryUnit.getTokenByDiary(request.getContent());
+        List<String> imgNameList = diaryUnit.getImgNameList(keywords);
+
+        Diary diary = diaryRepository.save(Diary.builder()
+                .title(request.getTitle())
                 .content(request.getContent())
-                .title(request.getTitle()).build();
-        Diary saved = diaryRepository.save(diary);
-        List<String> imgNameList = makeImageWithAI(request.getContent());
-        return new DiaryWriteResponse(saved.getId(), ImageToUrl(imgNameList));
+                .keywords(keywords)
+                .emotionScore(diaryUnit.getEmotionScore(request.getContent())).build());
+        return new DiaryWriteResponse(diary.getId(), ImageToUrl(imgNameList));
     }
 
     public List<String> ImageToUrl(List<String> imgNameList) throws IOException {
@@ -51,23 +58,6 @@ public class DiaryService {
             imageResponses.add(urlPath + "diary/images?uuid=" + imgName);
         }
         return imageResponses;
-    }
-
-    //이미지 생성
-    private List<String> makeImageWithAI(String content){
-        String tokens = diaryUnit.getTokenByDiary(content);
-        return diaryUnit.getImgNameList(tokens);
-    }
-
-    private byte[] readImageFile(String filePath) throws IOException {
-        File imageFile = new File(filePath);
-        FileInputStream fileInputStream = new FileInputStream(imageFile);
-
-        byte[] imageData = new byte[(int) imageFile.length()];
-        fileInputStream.read(imageData);
-        fileInputStream.close();
-
-        return imageData;
     }
 
     public DiaryResponse getOneDiary(Long id) {
@@ -115,7 +105,40 @@ public class DiaryService {
         ImageIO.write(outputImage, "png", baos);
         baos.flush();
 
-//        byte[] images = Files.readAllBytes(new File(filePath).toPath());
         return baos.toByteArray();
+    }
+
+    public Map<Integer, DiaryResponse> getImageListByMonth() {
+        // 현재 날짜를 가져옵니다.
+        LocalDate currentDate = LocalDate.now();
+
+        // 원하는 달을 설정합니다.
+        int year = currentDate.getYear();  // 현재 연도
+        int month = currentDate.getMonthValue();  // 현재 월
+
+        // YearMonth 객체를 생성하여 해당 달의 시작 날짜와 마지막 날짜를 가져옵니다.
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);  // 시작 날짜
+        LocalDate lastDay = yearMonth.atEndOfMonth();  // 마지막 날짜
+
+        Date startDate = java.sql.Date.valueOf(firstDay);
+        Date endDate = java.sql.Date.valueOf(lastDay);
+
+        List<Diary> diaryList = diaryRepository.findForMonthList(new Timestamp(startDate.getTime()),
+                new Timestamp(endDate.getTime()));
+
+        Map<Integer, DiaryResponse> diaryMap = new HashMap<>();
+        for (int i = 1; i <= lastDay.getDayOfMonth(); i++)
+            diaryMap.put(i, null);
+        for (Diary diary : diaryList) {
+            diaryMap.put(diary.getCreatedDate().toLocalDateTime().getDayOfMonth(),
+                    DiaryResponse.builder()
+                            .id(diary.getId())
+                            .title(diary.getTitle())
+                            .urlPath(urlPath + "diary/images?uuid=" + diary.getArtName())
+                            .content(diary.getContent()).build());
+        }
+
+        return diaryMap;
     }
 }
