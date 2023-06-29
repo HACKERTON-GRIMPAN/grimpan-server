@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 
 @Api(tags = "일기 API")
@@ -48,8 +49,8 @@ public class DiaryController {
 
     @Operation(summary = "이미지 다운로드", description = "해당 UUID를 가진 이미지 보여주기")
     @GetMapping(value = "/images")
-    public ResponseEntity<?> downloadImage(@RequestParam("uuid") String fileName) throws Exception {
-        byte[] imageData = diaryService.downloadImage(fileName);
+    public ResponseEntity<?> downloadImage(@RequestParam("uuid") String fileName, @RequestParam("size") Integer size) throws Exception {
+        byte[] imageData = diaryService.downloadImage(fileName, size);
 
         if (imageData.length == 0)
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -58,5 +59,19 @@ public class DiaryController {
             return ResponseEntity.status(HttpStatus.OK)
                     .contentType(MediaType.valueOf("image/png"))
                     .body(imageData);
+    }
+
+    @Operation(summary = "이미지 해당 달 조회", description = "현재 달에 해당하는 이미지 List 보여주기")
+    @GetMapping(value = "/imageMonth")
+    public ResponseEntity<?> getImageListForMonth() throws IOException {
+        List<Map<Integer, DiaryResponse>> diaryMap = diaryService.getImageListByMonth();
+        return ResponseEntity.ok().body(diaryMap);
+    }
+
+    @Operation(summary = "해당 주 감정 점수 조회", description = "현재 주에 해당하는 감정 점수 보여주기")
+    @GetMapping(value = "/scoreWeek")
+    public ResponseEntity<?> getScoreListForWeek() throws IOException {
+        List<Map<Integer, Integer>> diaryMap = diaryService.getScoreListForWeek();
+        return ResponseEntity.ok().body(diaryMap);
     }
 }

@@ -32,36 +32,7 @@ public class DiaryUnit {
     private static final HttpHeaders headers = new HttpHeaders();
     private static final JSONObject body = new JSONObject();
 
-    public String changeLanguage(String content) {
-        headers.clear();
-        headers.add("Content-type","application/json; charset=utf-8");
-        headers.add("Authorization", "Bearer "+ GPT_KEY);
-
-        body.clear();
-        body.put("model", "gpt-3.5-turbo");
-        List<ChatGPTQuery> messages = new ArrayList<>();
-        messages.add(ChatGPTQuery.builder()
-                .role("system")
-                .content("영어로 번역해줘.").build());
-        messages.add(ChatGPTQuery.builder()
-                .role("user")
-                .content(content.replace("\n", " ")).build());
-
-        body.put("messages", messages);
-        HttpEntity<?> request = new HttpEntity<String>(body.toString(), headers);
-
-        ResponseEntity<String> response = restTemplate.exchange(
-                GPT_URL,
-                HttpMethod.POST,
-                request,
-                String.class
-        );
-
-        JsonArray choices = (JsonArray) JsonParser.parseString(Objects.requireNonNull(response.getBody())).getAsJsonObject().get("choices");
-        return choices.get(0).getAsJsonObject().get("message").getAsJsonObject().get("content").getAsString();
-    }
-
-    public String getFirstTokens(String content) {
+    public String getTokenByDiary(String content) {
         headers.clear();
         headers.add("Content-type","application/json; charset=utf-8");
         headers.add("Authorization", "Bearer "+ GPT_KEY);
@@ -73,40 +44,18 @@ public class DiaryUnit {
                 .role("system")
                 .content("Please adjust the AI that generates images to make it draw pictures well by making expressions, such as adjectives, more dramatic. Leave only the content necessary for drawing in the text and discard the rest.").build());
         messages.add(ChatGPTQuery.builder()
-                .role("assistant")
-                .content(content).build());
-
-        body.put("messages", messages);
-        HttpEntity<?> request = new HttpEntity<String>(body.toString(), headers);
-
-        ResponseEntity<String> response = restTemplate.exchange(
-                GPT_URL,
-                HttpMethod.POST,
-                request,
-                String.class
-        );
-
-        JsonArray choices = (JsonArray) JsonParser.parseString(Objects.requireNonNull(response.getBody())).getAsJsonObject().get("choices");
-        return choices.get(0).getAsJsonObject().get("message").getAsJsonObject().get("content").getAsString();
-    }
-
-    public String getSecondTokens(String firstTokens) {
-        headers.clear();
-        headers.add("Content-type","application/json; charset=utf-8");
-        headers.add("Authorization", "Bearer "+ GPT_KEY);
-
-        body.clear();
-        body.put("model", "gpt-3.5-turbo");
-        List<ChatGPTQuery> messages = new ArrayList<>();
+                .role("user")
+                .content(content.replace("\n", " ")).build());
         messages.add(ChatGPTQuery.builder()
-                .role("system")
+                .role("user")
+                .content("Please adjust the AI that generates images to make it draw pictures well by making expressions, such as adjectives, more dramatic. Leave only the content necessary for drawing in the text and discard the rest.").build());
+        messages.add(ChatGPTQuery.builder()
+                .role("user")
                 .content("condense up to 4 outward descriptions to focus on nouns and adjectives separated by commas, ensuring that the total length does not exceed 150 characters.").build());
-        messages.add(ChatGPTQuery.builder()
-                .role("assistant")
-                .content(firstTokens).build());
 
         body.put("messages", messages);
         HttpEntity<?> request = new HttpEntity<String>(body.toString(), headers);
+
         ResponseEntity<String> response = restTemplate.exchange(
                 GPT_URL,
                 HttpMethod.POST,
@@ -119,12 +68,12 @@ public class DiaryUnit {
                 + ", beautiful, Hand-drawn, Pastel, Warm, Colored pencils, Soft, by Oscar-Claude Monet";
     }
 
-    public List<String> getImgNameList(String secondTokens) {
+    public List<String> getImgNameList(String tokens) {
         headers.clear();
         headers.add("Content-type","application/json");
 
         body.clear();
-        body.put("tokens", secondTokens);
+        body.put("tokens", tokens);
         body.put("key", KARLO_KEY);
 
         HttpEntity<?> request = new HttpEntity<String>(body.toString(), headers);
@@ -146,7 +95,7 @@ public class DiaryUnit {
         return imgNames;
     }
 
-    public Integer getEmotionScore(String content) {
+    public Long getEmotionScore(String content) {
         headers.clear();
         headers.add("Content-type","application/json; charset=utf-8");
         headers.add("Authorization", "Bearer "+ GPT_KEY);
@@ -172,6 +121,6 @@ public class DiaryUnit {
         );
 
         JsonArray choices = (JsonArray) JsonParser.parseString(Objects.requireNonNull(response.getBody())).getAsJsonObject().get("choices");
-        return choices.get(0).getAsJsonObject().get("message").getAsJsonObject().get("content").getAsInt();
+        return (long) choices.get(0).getAsJsonObject().get("message").getAsJsonObject().get("content").getAsInt();
     }
 }

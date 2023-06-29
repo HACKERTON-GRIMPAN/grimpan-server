@@ -12,12 +12,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Base64;
+import java.sql.Timestamp;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.*;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -33,12 +38,15 @@ public class DiaryService {
 
     @Transactional
     public DiaryWriteResponse create(DiaryWriteRequest request) throws IOException {
-        Diary diary = Diary.builder()
+        String keywords = diaryUnit.getTokenByDiary(request.getContent());
+        List<String> imgNameList = diaryUnit.getImgNameList(keywords);
+
+        Diary diary = diaryRepository.save(Diary.builder()
+                .title(request.getTitle())
                 .content(request.getContent())
-                .title(request.getTitle()).build();
-        Diary saved = diaryRepository.save(diary);
-        List<String> imgNameList = makeImageWithAI(request.getContent());
-        return new DiaryWriteResponse(saved.getId(), ImageToUrl(imgNameList));
+                .keywords(keywords)
+                .emotionScore(diaryUnit.getEmotionScore(request.getContent())).build());
+        return new DiaryWriteResponse(diary.getId(), ImageToUrl(imgNameList));
     }
 
     public List<String> ImageToUrl(List<String> imgNameList) throws IOException {
@@ -47,25 +55,6 @@ public class DiaryService {
             imageResponses.add(urlPath + "diary/images?uuid=" + imgName);
         }
         return imageResponses;
-    }
-
-    //이미지 생성
-    private List<String> makeImageWithAI(String content){
-        String englishContent = diaryUnit.changeLanguage(content);
-        String firstTokens = diaryUnit.getFirstTokens(englishContent);
-        String secondTokens = diaryUnit.getSecondTokens(firstTokens);
-        return diaryUnit.getImgNameList(secondTokens);
-    }
-
-    private byte[] readImageFile(String filePath) throws IOException {
-        File imageFile = new File(filePath);
-        FileInputStream fileInputStream = new FileInputStream(imageFile);
-
-        byte[] imageData = new byte[(int) imageFile.length()];
-        fileInputStream.read(imageData);
-        fileInputStream.close();
-
-        return imageData;
     }
 
     public DiaryResponse getOneDiary(Long id) {
@@ -96,12 +85,99 @@ public class DiaryService {
         return new DiaryResponse(diary.getId(), diary.getTitle(), imageUrlPath, diary.getContent());
     }
 
-    public byte[] downloadImage(String UuidName) throws IOException {
+    public byte[] downloadImage(String UuidName, Integer size) throws IOException {
         String filePath = imagePath;
 
         filePath = imagePath + UuidName;
 
-        byte[] images = Files.readAllBytes(new File(filePath).toPath());
-        return images;
+        BufferedImage inputImage = ImageIO.read(new File(filePath));
+
+        BufferedImage outputImage = new BufferedImage(size, size, inputImage.getType());
+
+        Graphics2D graphics2D = outputImage.createGraphics();
+        graphics2D.drawImage(inputImage, 0, 0, size, size, null);
+        graphics2D.dispose();
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(outputImage, "png", baos);
+        baos.flush();
+
+        return baos.toByteArray();
+    }
+
+    public List<Map<Integer, DiaryResponse>> getImageListByMonth() {
+        LocalDate currentDate = LocalDate.now();
+
+        int year = currentDate.getYear();  // 현재 연도
+        int month = currentDate.getMonthValue();  // 현재 월
+
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);  // 시작 날짜
+        LocalDate lastDay = yearMonth.atEndOfMonth();  // 마지막 날짜
+
+        Date startDate = java.sql.Date.valueOf(firstDay);
+        Date endDate = java.sql.Date.valueOf(lastDay.plusDays(1));
+
+        List<Diary> diaryList = diaryRepository.findForMonthList(new Timestamp(startDate.getTime()),
+                new Timestamp(endDate.getTime()));
+
+        List<Map<Integer, DiaryResponse>> responseList = new ArrayList<>();
+        for (int i = 1; i <= lastDay.getDayOfMonth(); i++) {
+            Map<Integer, DiaryResponse> map = new HashMap<>();
+            map.put(i, null);
+            responseList.add(map);
+        }
+
+        for (Diary diary : diaryList) {
+            Map<Integer, DiaryResponse> map = new HashMap<>();
+            map.put(diary.getCreatedDate().toLocalDateTime().getDayOfMonth(),
+                    DiaryResponse.builder()
+                    .id(diary.getId())
+                    .title(diary.getTitle())
+                    .urlPath(urlPath + "diary/images?uuid=" + diary.getArtName())
+                    .content(diary.getContent()).build());
+            responseList.set(diary.getCreatedDate().toLocalDateTime().getDayOfMonth() - 1, map);
+        }
+
+        return responseList;
+    }
+
+    public List<Map<Integer, Integer>> getScoreListForWeek() {
+        LocalDate currentDate = LocalDate.now();
+
+        // 현재 날짜에서 제일 가까운 일요일
+        LocalDate firstDay = currentDate.with(DayOfWeek.SUNDAY);
+        // 현재 날짜에서 제일 가까운 토요일
+        LocalDate lastDay = currentDate.with(DayOfWeek.SATURDAY);
+        
+        if (!lastDay.isAfter(firstDay)) {
+            firstDay = lastDay.minusDays(6);
+        } else {
+            lastDay = firstDay.plusDays(6);
+        }
+
+        Date startDate = java.sql.Date.valueOf(firstDay);
+        Date endDate = java.sql.Date.valueOf(lastDay.plusDays(1));
+
+        List<Diary> diaryList = diaryRepository.findForMonthList(new Timestamp(startDate.getTime()),
+                new Timestamp(endDate.getTime()));
+
+        List<Map<Integer, Integer>> responseList = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            Map<Integer, Integer> map = new HashMap<>();
+            map.put(i, null);
+            responseList.add(map);
+        }
+
+        for (Diary diary : diaryList) {
+            int index = diary.getCreatedDate().toLocalDateTime().getDayOfMonth() - firstDay.getDayOfMonth();
+
+            Map<Integer, Integer> map = new HashMap<>();
+            map.put(index, diary.getEmotionScore().intValue());
+
+            responseList.set(index, map);
+        }
+
+        return responseList;
     }
 }
