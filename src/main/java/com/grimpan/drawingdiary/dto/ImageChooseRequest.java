@@ -7,5 +7,5 @@ import lombok.Getter;
 @Getter
 public class ImageChooseRequest {
     private String artName;
-    private boolean isSelected;
+    private Boolean isSelected;
 }

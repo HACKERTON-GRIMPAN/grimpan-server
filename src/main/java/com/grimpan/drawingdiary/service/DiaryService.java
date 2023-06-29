@@ -76,10 +76,10 @@ public class DiaryService {
     }
 
     @Transactional
-    public DiaryResponse chooseImage(Long id, List<ImageChooseRequest> requestList) throws IOException {
+    public DiaryResponse chooseImage(Long id, List<ImageChooseRequest> requestList) {
         String selectedImage = "";
         for(ImageChooseRequest request : requestList){
-            if(!request.isSelected()){
+            if(!request.getIsSelected().booleanValue()){
                 String imageFullPath = imagePath + request.getArtName();
                 File file = new File(imageFullPath);
                 if(file.delete()){
@@ -90,8 +90,14 @@ public class DiaryService {
             }
         }
 
+        //선택된 이미지와 관련 일기 리턴
         String imageFullPath = imagePath + selectedImage;
-        byte[] imageByte = readImageFile(imageFullPath);
+        byte[] imageByte = new byte[0];
+        try {
+            imageByte = readImageFile(imageFullPath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         String base64Data = Base64.getEncoder().encodeToString(imageByte);
 
         Diary diary = diaryRepository.findById(id).orElseThrow(() -> new DiaryException(ErrorCode.DIARY_NOT_FOUND));
