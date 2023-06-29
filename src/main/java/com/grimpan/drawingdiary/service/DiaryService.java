@@ -116,7 +116,7 @@ public class DiaryService {
         LocalDate lastDay = yearMonth.atEndOfMonth();  // 마지막 날짜
 
         Date startDate = java.sql.Date.valueOf(firstDay);
-        Date endDate = java.sql.Date.valueOf(lastDay);
+        Date endDate = java.sql.Date.valueOf(lastDay.plusDays(1));
 
         List<Diary> diaryList = diaryRepository.findForMonthList(new Timestamp(startDate.getTime()),
                 new Timestamp(endDate.getTime()));
@@ -136,7 +136,7 @@ public class DiaryService {
                     .title(diary.getTitle())
                     .urlPath(urlPath + "diary/images?uuid=" + diary.getArtName())
                     .content(diary.getContent()).build());
-            responseList.set(diary.getCreatedDate().toLocalDateTime().getDayOfMonth(), map);
+            responseList.set(diary.getCreatedDate().toLocalDateTime().getDayOfMonth() - 1, map);
         }
 
         return responseList;
@@ -157,7 +157,7 @@ public class DiaryService {
         }
 
         Date startDate = java.sql.Date.valueOf(firstDay);
-        Date endDate = java.sql.Date.valueOf(lastDay);
+        Date endDate = java.sql.Date.valueOf(lastDay.plusDays(1));
 
         List<Diary> diaryList = diaryRepository.findForMonthList(new Timestamp(startDate.getTime()),
                 new Timestamp(endDate.getTime()));
