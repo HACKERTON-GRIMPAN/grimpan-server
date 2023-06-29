@@ -3,6 +3,7 @@ package com.grimpan.drawingdiary.service;
 import com.grimpan.drawingdiary.domain.Diary;
 import com.grimpan.drawingdiary.dto.DiaryResponse;
 import com.grimpan.drawingdiary.dto.DiaryWriteRequest;
+import com.grimpan.drawingdiary.dto.DiaryWriteResponse;
 import com.grimpan.drawingdiary.dto.ImageResponse;
 import com.grimpan.drawingdiary.exception.DiaryException;
 import com.grimpan.drawingdiary.exception.ErrorCode;
@@ -30,13 +31,13 @@ public class DiaryService {
     private final DiaryToImageUnit diaryToImageUnit;
 
     @Transactional
-    public List<ImageResponse> create(DiaryWriteRequest request) throws IOException {
+    public DiaryWriteResponse create(DiaryWriteRequest request) throws IOException {
         Diary diary = Diary.builder()
                 .content(request.getContent())
                 .title(request.getTitle()).build();
-        diaryRepository.save(diary);
+        Diary saved = diaryRepository.save(diary);
         List<String> imgNameList = makeImageWithAI(request.getContent());
-        return ImageToBase64(imgNameList);
+        return new DiaryWriteResponse(saved.getId(),ImageToBase64(imgNameList));
     }
 
     public List<ImageResponse> ImageToBase64(List<String> imgNameList) throws IOException {
@@ -75,12 +76,19 @@ public class DiaryService {
     }
 
     @Transactional
-    public void chooseImage(String imageName) {
+    public DiaryResponse chooseImage(Long id, String imageName) throws IOException {
         File[] files = new File(imagePath).listFiles();
         for(File f: files){
             if(!f.getName().equals(imageName)){
                 f.delete();
             }
         }
+        String imageFullPath = imagePath + imageName;
+        byte[] imageByte = readImageFile(imageFullPath);
+        String base64Data = Base64.getEncoder().encodeToString(imageByte);
+
+        Diary diary = diaryRepository.findById(id).orElseThrow(() -> new DiaryException(ErrorCode.DIARY_NOT_FOUND));
+        diary.setArtName(imageName);
+        return new DiaryResponse(diary.getId(), diary.getTitle(),base64Data, diary.getContent());
     }
 }
