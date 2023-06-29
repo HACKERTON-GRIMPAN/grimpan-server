@@ -8,6 +8,8 @@ import com.grimpan.drawingdiary.service.DiaryService;
 import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,9 +40,23 @@ public class DiaryController {
     }
 
     @Operation(summary = "이미지 선택", description = "4개의 이미지 중 사용자가 선택한 이미지만 남기기")
-    @GetMapping(value = "/{id}/images")
+    @PutMapping(value = "/{id}/images")
     public ResponseEntity<DiaryResponse> chooseImage(@PathVariable Long id, @RequestBody List<ImageChooseRequest> requestList) throws IOException {
         DiaryResponse response = diaryService.chooseImage(id, requestList);
         return ResponseEntity.ok().body(response);
+    }
+
+    @Operation(summary = "이미지 다운로드", description = "해당 UUID를 가진 이미지 보여주기")
+    @GetMapping(value = "/images")
+    public ResponseEntity<?> downloadImage(@RequestParam("uuid") String fileName) throws Exception {
+        byte[] imageData = diaryService.downloadImage(fileName);
+
+        if (imageData.length == 0)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("fail");
+        else
+            return ResponseEntity.status(HttpStatus.OK)
+                    .contentType(MediaType.valueOf("image/png"))
+                    .body(imageData);
     }
 }

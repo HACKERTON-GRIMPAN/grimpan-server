@@ -11,5 +11,5 @@ import java.util.List;
 @Getter
 public class DiaryWriteResponse {
     private Long id;
-    private List<ImageResponse> imageResponses;
+    private List<String> imageResponses;
 }

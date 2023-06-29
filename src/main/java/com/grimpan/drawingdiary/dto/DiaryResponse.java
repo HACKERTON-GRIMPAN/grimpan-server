@@ -11,7 +11,7 @@ import lombok.Getter;
 public class DiaryResponse {
     private Long id;
     private String title;
-    private String imageData;
+    private String urlPath;
     private String content;
 
     public static DiaryResponse of(Diary diary){

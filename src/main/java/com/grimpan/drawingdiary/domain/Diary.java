@@ -22,9 +22,10 @@ public class Diary {
     @Column(name = "id")
     private Long id;
 
+    @Column(name = "title", nullable = false)
     private String title;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -23,9 +24,10 @@ import java.util.List;
 @Slf4j
 @Service
 public class DiaryService {
-
     @Value("${spring.image.path}")
     private String imagePath;
+    @Value("${spring.url.path}")
+    private String urlPath;
     private final DiaryRepository diaryRepository;
     private final DiaryUnit diaryUnit;
 
@@ -36,17 +38,13 @@ public class DiaryService {
                 .title(request.getTitle()).build();
         Diary saved = diaryRepository.save(diary);
         List<String> imgNameList = makeImageWithAI(request.getContent());
-        return new DiaryWriteResponse(saved.getId(),ImageToBase64(imgNameList));
+        return new DiaryWriteResponse(saved.getId(), ImageToUrl(imgNameList));
     }
 
-    public List<ImageResponse> ImageToBase64(List<String> imgNameList) throws IOException {
-        List<ImageResponse> imageResponses = new ArrayList<>();
-        for(String imgName:imgNameList){
-            String fullPath = imagePath +  imgName;
-            byte[] imageByte = readImageFile(fullPath);
-            String base64Data = Base64.getEncoder().encodeToString(imageByte);
-            ImageResponse imageResponse = new ImageResponse(imgName, base64Data);
-            imageResponses.add(imageResponse);
+    public List<String> ImageToUrl(List<String> imgNameList) throws IOException {
+        List<String> imageResponses = new ArrayList<>();
+        for(String imgName : imgNameList){
+            imageResponses.add(urlPath + "diary/images?uuid=" + imgName);
         }
         return imageResponses;
     }
@@ -91,17 +89,19 @@ public class DiaryService {
         }
 
         //선택된 이미지와 관련 일기 리턴
-        String imageFullPath = imagePath + selectedImage;
-        byte[] imageByte = new byte[0];
-        try {
-            imageByte = readImageFile(imageFullPath);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        String base64Data = Base64.getEncoder().encodeToString(imageByte);
+        String imageUrlPath = urlPath + "diary/images?uuid=" + selectedImage;
 
-        Diary diary = diaryRepository.findById(id).orElseThrow(() -> new DiaryException(ErrorCode.DIARY_NOT_FOUND));
+        Diary diary = diaryRepository.findForSetImage(id).orElseThrow(() -> new DiaryException(ErrorCode.DIARY_NOT_FOUND));
         diary.setArtName(selectedImage);
-        return new DiaryResponse(diary.getId(), diary.getTitle(),base64Data, diary.getContent());
+        return new DiaryResponse(diary.getId(), diary.getTitle(), imageUrlPath, diary.getContent());
+    }
+
+    public byte[] downloadImage(String UuidName) throws IOException {
+        String filePath = imagePath;
+
+        filePath = imagePath + UuidName;
+
+        byte[] images = Files.readAllBytes(new File(filePath).toPath());
+        return images;
     }
 }
