@@ -51,10 +51,8 @@ public class DiaryService {
 
     //이미지 생성
     private List<String> makeImageWithAI(String content){
-        String englishContent = diaryUnit.changeLanguage(content);
-        String firstTokens = diaryUnit.getFirstTokens(englishContent);
-        String secondTokens = diaryUnit.getSecondTokens(firstTokens);
-        return diaryUnit.getImgNameList(secondTokens);
+        String tokens = diaryUnit.getTokenByDiary(content);
+        return diaryUnit.getImgNameList(tokens);
     }
 
     private byte[] readImageFile(String filePath) throws IOException {
