@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
-@Api(tags = "사례일 전시(캘린더)")
+@Api(tags = "일기 API")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/diary")
@@ -20,7 +20,7 @@ public class DiaryController {
 
     @Operation(summary = "일기 작성")
     @PostMapping("")
-    public ResponseEntity<DiaryWriteResponse> createDiary(@ModelAttribute DiaryWriteRequest request) {
+    public ResponseEntity<DiaryWriteResponse> createDiary(@RequestBody DiaryWriteRequest request) {
         DiaryWriteResponse response = diaryService.create(request);
         return ResponseEntity.ok()
                 .body(response);

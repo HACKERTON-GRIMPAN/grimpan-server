@@ -18,7 +18,9 @@ public class DiaryService {
 
     @Transactional
     public DiaryWriteResponse create(DiaryWriteRequest request) {
-        Diary diary = Diary.builder().content(request.getContent()).build();
+        Diary diary = Diary.builder()
+                .content(request.getContent())
+                .title(request.getTitle()).build();
         Diary saved = diaryRepository.save(diary);
         return DiaryWriteResponse.of(saved);
     }

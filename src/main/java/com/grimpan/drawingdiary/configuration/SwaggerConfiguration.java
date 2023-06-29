@@ -8,10 +8,7 @@ import springfox.documentation.service.ApiInfo;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 
-import static springfox.documentation.builders.PathSelectors.regex;
-
 @Configuration
-
 public class SwaggerConfiguration {
     private String version = "V 0.1";
     @Bean
@@ -19,7 +16,6 @@ public class SwaggerConfiguration {
         return new Docket(DocumentationType.OAS_30)
                 .select()
                 .apis(RequestHandlerSelectors.any())
-                .paths(regex("/api/.*"))
                 .build()
                 .apiInfo(apiInfo());
     }
