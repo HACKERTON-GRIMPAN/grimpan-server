@@ -21,9 +21,9 @@ public class ExceptionManager {
         return ResponseEntity.status(e.getErrorCode().getHttpStatus()).body(e.getMessage());
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> defaultExceptionHandler(Exception e){
-        log.error("HandleException throw Exception : {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-    }
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<?> defaultExceptionHandler(Exception e){
+//        log.error("HandleException throw Exception : {}", e.getMessage());
+//        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+//    }
 }

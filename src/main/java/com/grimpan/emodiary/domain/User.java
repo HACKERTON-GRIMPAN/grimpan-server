@@ -61,15 +61,14 @@ public class User {
 
 
     @Builder
-    public User(String name, String nickname, String phoneNumber,
-                UserRole role, String refreshToken) {
+    public User(String name, String nickname, String phoneNumber, UserRole role) {
         this.createdAt = Timestamp.valueOf(LocalDateTime.now());
         this.name = name;
         this.nickname = nickname;
         this.phoneNumber = phoneNumber;
         this.role = role;
         this.isLogin = Boolean.TRUE;
-        this.refreshToken = refreshToken;
+        this.refreshToken = null;
         this.deviceToken = null;
     }
 

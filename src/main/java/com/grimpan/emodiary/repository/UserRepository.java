@@ -13,7 +13,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u.id AS id, u.role AS role FROM User u WHERE u.id = :userId AND u.isLogin = true AND u.refreshToken = :refreshToken")
     Optional<UserLoginForm> findByIdAndRefreshToken(@Param("userId") Long userId, @Param("refreshToken") String refreshToken);
 
+
+
     Optional<User> findByIdAndIsLoginAndRefreshTokenIsNotNull(Long userId, Boolean isLogin);
+
+    Optional<User> findByPhoneNumber(String phoneNumber);
 
     public interface UserLoginForm {
         Long getId();

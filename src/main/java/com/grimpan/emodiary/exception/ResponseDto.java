@@ -3,12 +3,13 @@ package com.grimpan.emodiary.exception;
 import io.micrometer.common.lang.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.extern.java.Log;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 @Slf4j
+@Getter
 @Builder
 @AllArgsConstructor
 public class ResponseDto<Data_> {

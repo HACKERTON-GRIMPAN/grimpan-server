@@ -2,6 +2,8 @@ package com.grimpan.emodiary.service;
 
 import com.grimpan.emodiary.domain.User;
 import com.grimpan.emodiary.domain.type.AuthenticationProvider;
+import com.grimpan.emodiary.domain.type.UserRole;
+import com.grimpan.emodiary.dto.SignUpRequestDto;
 import com.grimpan.emodiary.exception.ErrorCode;
 import com.grimpan.emodiary.exception.UserException;
 import com.grimpan.emodiary.repository.LoginProviderRepository;
@@ -36,6 +38,27 @@ public class AuthenticationService {
         Map<String, String> jwt = jwtProvider.createTotalToken(loginUser.getId(), loginUser.getRole());
         loginUser.updateRefreshToken(jwt.get("refresh_token"));
         loginUser.updateOnline();
+
+        return jwt;
+    }
+
+    public Map<String, String> signup(String authorizationStr, AuthenticationProvider provider, SignUpRequestDto requestDto) {
+        User signUpUser = null;
+
+        if (requestDto.getName() == null) {
+            signUpUser = userRepository.findByPhoneNumber(requestDto.getPhoneNumber().replace("-", ""))
+                    .orElseThrow(() -> new UserException(ErrorCode.NOT_FOUND_SIGNUP_HISTORY));
+        } else {
+            signUpUser = userRepository.save(User.builder()
+                    .name(requestDto.getName())
+                    .nickname(requestDto.getNickname())
+                    .phoneNumber(requestDto.getPhoneNumber().replace("-", ""))
+                    .role(provider.equals(AuthenticationProvider.DEFAULT) ? UserRole.ADMIN : UserRole.USER).build());
+        }
+
+        Map<String, String> jwt = jwtProvider.createTotalToken(signUpUser.getId(), signUpUser.getRole());
+        signUpUser.updateRefreshToken(jwt.get("refresh_token"));
+        signUpUser.updateOnline();
 
         return jwt;
     }
