@@ -11,10 +11,12 @@ import com.grimpan.emodiary.repository.LoginProviderRepository;
 import com.grimpan.emodiary.repository.UserRepository;
 import com.grimpan.emodiary.security.jwt.JwtProvider;
 import com.grimpan.emodiary.unit.Oauth2Util;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.beans.Transient;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,10 +30,12 @@ public class AuthenticationService {
     private final LoginProviderRepository loginProviderRepository;
 
 
+    @Transactional
     public Map<String, String> login(String authorizationStr, AuthenticationProvider provider) {
-        String socialId = getSocialId(authorizationStr, provider);
+        // 소셜 인증 서버에서 소셜 아이디 받기
+        String socialId = oauth2Util.getSocialId(authorizationStr, provider);
 
-        // 해당 소셜 아이디로 로그인 한 사람 확인
+        // 해당 소셜 아이디로 로그인 한 사람 확인(없다면 User Exception 발생)
         User loginUser = loginProviderRepository.findBySocialIdAndProvider(socialId, provider)
                 .orElseThrow(() -> new UserException(ErrorCode.NOT_FOUND_SIGNUP_HISTORY)).getUser();
 
@@ -43,9 +47,12 @@ public class AuthenticationService {
         return jwt;
     }
 
+    @Transactional
     public Map<String, String> signup(String authorizationStr, AuthenticationProvider provider, SignUpRequestDto requestDto) {
+        // 회원가입을 위한 User
         User signUpUser = null;
 
+        // 만약 기존 유저라면 찾아서 넣고, 새로운 유저라면 Row를 만들어준다.
         if (requestDto.getName() == null) {
             signUpUser = userRepository.findByPhoneNumber(requestDto.getPhoneNumber().replace("-", ""))
                     .orElseThrow(() -> new UserException(ErrorCode.NOT_FOUND_SIGNUP_HISTORY));
@@ -57,35 +64,20 @@ public class AuthenticationService {
                     .role(provider.equals(AuthenticationProvider.DEFAULT) ? UserRole.ADMIN : UserRole.USER).build());
         }
 
+        // 해당 로그인 유형을 넣어준다.
+        loginProviderRepository.save(LoginProvider.builder()
+                        .user(signUpUser)
+                        .socialId(oauth2Util.getSocialId(authorizationStr, provider))
+                        .provider(provider).build());
+
+        // JWT를 발행한다.
         Map<String, String> jwt = jwtProvider.createTotalToken(signUpUser.getId(), signUpUser.getRole());
         signUpUser.updateRefreshToken(jwt.get("refresh_token"));
         signUpUser.updateOnline();
 
-        loginProviderRepository.save(LoginProvider.builder()
-                        .user(signUpUser)
-                        .socialId(getSocialId(authorizationStr, provider))
-                        .provider(provider).build());
-
+        // 발행한 JWT를 반환한다.
         return jwt;
     }
 
-    private String getSocialId(String authorizationStr, AuthenticationProvider provider) {
-        String socialId = null;
-        switch (provider) {
-            case KAKAO -> {
-                socialId = oauth2Util.getKakaoUserInformation(authorizationStr);
-            }
-            case GOOGLE -> {
-            }
-            case APPLE -> {
-            }
-            case DEFAULT -> {
-            }
-        }
 
-        // 소셜 서버에 User Data 존재 여부 확인
-        if (socialId == null) { throw new UserException(ErrorCode.NOT_FOUND_USER); }
-
-        return socialId;
-    }
 }

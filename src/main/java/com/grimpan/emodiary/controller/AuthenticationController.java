@@ -21,23 +21,23 @@ public class AuthenticationController {
 
     @PostMapping("/kakao")
     public ResponseDto<Map<String, String>> loginByKakao(HttpServletRequest request) {
-        return new ResponseDto<>(authenticationService.login(JwtProvider.refineToken(request), AuthenticationProvider.KAKAO));
+        return ResponseDto.ok(authenticationService.login(JwtProvider.refineToken(request), AuthenticationProvider.KAKAO));
     }
 
     @PostMapping("/google")
     public ResponseDto<Map<String, String>> loginBuGoogle(HttpServletRequest request) {
-        return new ResponseDto<>(authenticationService.login(JwtProvider.refineToken(request), AuthenticationProvider.GOOGLE));
+        return ResponseDto.ok(authenticationService.login(JwtProvider.refineToken(request), AuthenticationProvider.GOOGLE));
     }
 
     @PostMapping("/apple")
     public ResponseDto<Map<String, String>> loginByApple(HttpServletRequest request) {
-        return new ResponseDto<>(authenticationService.login(JwtProvider.refineToken(request), AuthenticationProvider.APPLE));
+        return ResponseDto.ok(authenticationService.login(JwtProvider.refineToken(request), AuthenticationProvider.APPLE));
     }
 
     @PostMapping("/signup")
     public ResponseDto<Map<String, String>> signUp(HttpServletRequest request,
                                                    @RequestParam("provider") AuthenticationProvider provider,
                                                    @RequestBody SignUpRequestDto requestDto) {
-        return new ResponseDto<>(authenticationService.signup(JwtProvider.refineToken(request), provider, requestDto));
+        return ResponseDto.ok(authenticationService.signup(JwtProvider.refineToken(request), provider, requestDto));
     }
 }
