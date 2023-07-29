@@ -1,5 +1,6 @@
 package com.grimpan.emodiary.service;
 
+import com.grimpan.emodiary.domain.LoginProvider;
 import com.grimpan.emodiary.domain.User;
 import com.grimpan.emodiary.domain.type.AuthenticationProvider;
 import com.grimpan.emodiary.domain.type.UserRole;
@@ -59,6 +60,11 @@ public class AuthenticationService {
         Map<String, String> jwt = jwtProvider.createTotalToken(signUpUser.getId(), signUpUser.getRole());
         signUpUser.updateRefreshToken(jwt.get("refresh_token"));
         signUpUser.updateOnline();
+
+        loginProviderRepository.save(LoginProvider.builder()
+                        .user(signUpUser)
+                        .socialId(getSocialId(authorizationStr, provider))
+                        .provider(provider).build());
 
         return jwt;
     }
