@@ -25,10 +25,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final CustomUserDetailService userDetailsService;
 
     private final String[] urls = { "/favicon.ico",
-            "/auth/kakao", "/auth/kakao/callback",
-            "/auth/google", "/auth/google/callback",
-            "/auth/apple", "/auth/apple/callback",
-            "/auth/refresh", "/image" };
+            "/api/v1/auth/kakao", "/api/v1/auth/google",
+            "/api/v1/auth/apple", "/api/v1/auth/default",
+            "/api/v1/auth/signup", "/api/v1/auth/reissue" };
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -49,6 +48,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        return Arrays.stream(urls).filter(url -> url.equals(request.getRequestURI())).count() > 0;
+        return Arrays.stream(urls).anyMatch(url -> url.equals(request.getRequestURI()));
     }
 }

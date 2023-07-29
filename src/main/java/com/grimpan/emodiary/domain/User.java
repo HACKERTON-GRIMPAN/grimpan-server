@@ -73,6 +73,14 @@ public class User {
         this.deviceToken = null;
     }
 
+    public void updateOnline() {
+        this.isLogin = true;
+    }
+
+    public void updateOffline() {
+        this.isLogin = false;
+    }
+
     public void updateNickName(String nickname) {
         this.nickname = nickname;
     }

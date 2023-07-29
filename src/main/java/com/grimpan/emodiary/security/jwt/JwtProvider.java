@@ -38,7 +38,7 @@ public class JwtProvider implements InitializingBean {
     /**
      * token 생성
      */
-    public String createToken(Long id, UserRole userRoleType, boolean isAccess) {
+    private String createToken(Long id, UserRole userRoleType, boolean isAccess) {
         Claims claims = Jwts.claims();
 
         claims.put("id", id);

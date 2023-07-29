@@ -33,10 +33,9 @@ public class SecurityConfig {
 
                 .and()
                 .authorizeHttpRequests()
-                .requestMatchers("/auth/kakao", "/auth/kakao/callback",
-                        "/auth/google", "/auth/google/callback",
-                        "/auth/apple", "/auth/apple/callback",
-                        "/auth/refresh", "/image").permitAll()
+                .requestMatchers("api/v1/auth/kakao", "api/v1/auth/google",
+                        "api/v1/auth/apple", "api/v1/auth/default",
+                        "api/v1/auth/signup", "api/v1/auth/reissue").permitAll()
                 .anyRequest().authenticated()
 
                 .and()
