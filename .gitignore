@@ -25,8 +25,9 @@ bin/
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
-application-local.yml
-application-server.yml
+src/main/resources/application-local.yml
+src/main/resources/application-dev.yml
+src/main/resources/application-prod.yml
 
 ### NetBeans ###
 /nbproject/private/
@@ -37,3 +38,6 @@ application-server.yml
 
 ### VS Code ###
 .vscode/
+
+### Mac OS ###
+.DS_Store
