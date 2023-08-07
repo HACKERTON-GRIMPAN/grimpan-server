@@ -1,5 +1,6 @@
 package com.grimpan.emodiary.exception;
 
+import com.grimpan.emodiary.dto.response.ResponseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,15 +11,16 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class ExceptionManager {
     @ExceptionHandler(DiaryException.class)
-    public ResponseEntity<?> diaryExceptionHandler(DiaryException e){
-        return ResponseEntity.status(e.getErrorCode().getHttpStatus()).body(e.getMessage());
+    public ResponseDto<?> diaryExceptionHandler(DiaryException e){
+        log.error("diaryExceptionHandler() in ExceptionManager throw DiaryException : {}", e.getMessage());
+        return ResponseDto.toResponseEntity(e);
     }
 
 
-    @ExceptionHandler(UserException.class)
-    public ResponseEntity<?> UserExceptionHandler(UserException e){
-        log.error("HandleException throw UserException : {}", e.getMessage());
-        return ResponseEntity.status(e.getErrorCode().getHttpStatus()).body(e.getMessage());
+    @ExceptionHandler(CommonException.class)
+    public ResponseDto<?> commonExceptionHandler(CommonException e) {
+        log.error("HandleException throw CommonException : {}", e.getMessage());
+        return ResponseDto.toResponseEntity(e);
     }
 
 //    @ExceptionHandler(Exception.class)

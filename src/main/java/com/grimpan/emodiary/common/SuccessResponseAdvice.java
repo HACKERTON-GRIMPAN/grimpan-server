@@ -1,6 +1,6 @@
 package com.grimpan.emodiary.common;
 
-import com.grimpan.emodiary.exception.ResponseDto;
+import com.grimpan.emodiary.dto.response.ResponseDto;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;

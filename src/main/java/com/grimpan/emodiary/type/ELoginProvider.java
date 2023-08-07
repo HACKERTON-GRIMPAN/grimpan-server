@@ -1,6 +1,6 @@
-package com.grimpan.emodiary.domain.type;
+package com.grimpan.emodiary.type;
 
-public enum AuthenticationProvider {
+public enum ELoginProvider {
     KAKAO, GOOGLE, APPLE, DEFAULT;
 
     @Override

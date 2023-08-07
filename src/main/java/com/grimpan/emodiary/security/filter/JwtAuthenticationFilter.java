@@ -1,5 +1,6 @@
 package com.grimpan.emodiary.security.filter;
 
+import com.grimpan.emodiary.common.Constants;
 import com.grimpan.emodiary.security.CustomUserDetail;
 import com.grimpan.emodiary.security.CustomUserDetailService;
 import com.grimpan.emodiary.security.jwt.JwtProvider;
@@ -24,11 +25,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtProvider jwtProvider;
     private final CustomUserDetailService userDetailsService;
 
-    private final String[] urls = { "/favicon.ico",
-            "/api/v1/auth/kakao", "/api/v1/auth/google",
-            "/api/v1/auth/apple", "/api/v1/auth/default",
-            "/api/v1/auth/signup", "/api/v1/auth/reissue" };
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = JwtProvider.refineToken(request);
@@ -48,6 +44,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        return Arrays.stream(urls).anyMatch(url -> url.equals(request.getRequestURI()));
+        return Arrays.stream(Constants.NO_NEED_AUTH_URLS).anyMatch(url -> url.equals(request.getRequestURI()));
     }
 }

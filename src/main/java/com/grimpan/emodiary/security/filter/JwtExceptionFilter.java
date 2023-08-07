@@ -1,5 +1,6 @@
 package com.grimpan.emodiary.security.filter;
 
+import com.grimpan.emodiary.common.Constants;
 import com.grimpan.emodiary.exception.ErrorCode;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -19,10 +20,6 @@ import java.util.Arrays;
 @Slf4j
 @RequiredArgsConstructor
 public class JwtExceptionFilter extends OncePerRequestFilter {
-    private final String[] urls = { "/api/v1/auth/kakao", "/api/v1/auth/google",
-            "/api/v1/auth/apple", "/api/v1/auth/default",
-            "/api/v1/auth/signup", "/api/v1/auth/reissue" };
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         response.setCharacterEncoding("utf-8");
@@ -68,6 +65,6 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        return Arrays.stream(urls).anyMatch(url -> url.equals(request.getRequestURI()));
+        return Arrays.stream(Constants.NO_NEED_AUTH_URLS).anyMatch(url -> url.equals(request.getRequestURI()));
     }
 }

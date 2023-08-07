@@ -1,18 +1,17 @@
 package com.grimpan.emodiary.exception;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@AllArgsConstructor
 @Getter
-public class UserException extends RuntimeException{
-    private ErrorCode errorCode;
-    private String message;
+public final class CommonException extends RuntimeException {
+    private final ErrorCode errorCode;
+    private final String message;
 
-    public UserException(ErrorCode errorCode) {
+    public CommonException(final ErrorCode errorCode, final String message) {
         this.errorCode = errorCode;
-        this.message = null;
+        this.message = message;
     }
+
     @Override
     public String getMessage() {
         if (message == null) {

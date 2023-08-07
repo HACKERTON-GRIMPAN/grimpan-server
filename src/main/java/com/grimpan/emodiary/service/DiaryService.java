@@ -1,7 +1,8 @@
 package com.grimpan.emodiary.service;
 
 import com.grimpan.emodiary.domain.Diary;
-import com.grimpan.emodiary.dto.*;
+import com.grimpan.emodiary.dto.request.*;
+import com.grimpan.emodiary.dto.response.*;
 import com.grimpan.emodiary.exception.DiaryException;
 import com.grimpan.emodiary.exception.ErrorCode;
 import com.grimpan.emodiary.repository.DiaryRepository;

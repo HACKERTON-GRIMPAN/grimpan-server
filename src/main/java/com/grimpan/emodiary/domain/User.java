@@ -1,6 +1,6 @@
 package com.grimpan.emodiary.domain;
 
-import com.grimpan.emodiary.domain.type.UserRole;
+import com.grimpan.emodiary.type.EUserRole;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -37,7 +37,7 @@ public class User {
 
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
-    private UserRole role;
+    private EUserRole role;
 
     @Column(name = "is_login", columnDefinition = "TINYINT(1)")
     private Boolean isLogin;
@@ -61,7 +61,7 @@ public class User {
 
 
     @Builder
-    public User(String name, String nickname, String phoneNumber, UserRole role) {
+    public User(String name, String nickname, String phoneNumber, EUserRole role) {
         this.createdAt = Timestamp.valueOf(LocalDateTime.now());
         this.name = name;
         this.nickname = nickname;

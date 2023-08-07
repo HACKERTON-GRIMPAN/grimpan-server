@@ -1,6 +1,7 @@
 package com.grimpan.emodiary.configuration;
 
 
+import com.grimpan.emodiary.common.Constants;
 import com.grimpan.emodiary.security.CustomUserDetailService;
 import com.grimpan.emodiary.security.JwtAccessDeniedHandler;
 import com.grimpan.emodiary.security.JwtEntryPoint;
@@ -12,6 +13,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HttpBasicConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -27,25 +30,24 @@ public class SecurityConfig {
 
     @Bean
     protected SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
-        httpSecurity.httpBasic().disable()
-                .csrf().disable()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        return httpSecurity.httpBasic(HttpBasicConfigurer::disable)
+                .csrf(CsrfConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .and()
-                .authorizeHttpRequests()
-                .requestMatchers("api/v1/auth/kakao", "api/v1/auth/google",
-                        "api/v1/auth/apple", "api/v1/auth/default",
-                        "api/v1/auth/signup", "api/v1/auth/reissue").permitAll()
-                .anyRequest().authenticated()
+                // 개발용이므로 후에는 삭제 예정(모든 요청 허용 상태 - 위험)
+                .authorizeHttpRequests(requestMatcherRegistry -> requestMatcherRegistry.anyRequest().permitAll())
 
-                .and()
-                .exceptionHandling()
-                .authenticationEntryPoint(jwtEntryPoint)
-                .accessDeniedHandler(jwtAccessDeniedHandler)
+                // .authorizeHttpRequests(requestMatcherRegistry -> requestMatcherRegistry
+                //         .requestMatchers(Constants.NO_NEED_AUTH_URLS).permitAll()
+                //         .anyRequest().authenticated())
 
-                .and()
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(jwtEntryPoint)
+                        .accessDeniedHandler(jwtAccessDeniedHandler))
+
                 .addFilterBefore(new JwtAuthenticationFilter(jwtProvider, customUserDetailService), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(new JwtExceptionFilter(), JwtAuthenticationFilter.class);
-        return httpSecurity.build();
+                .addFilterBefore(new JwtExceptionFilter(), JwtAuthenticationFilter.class)
+
+                .getOrBuild();
     }
 }

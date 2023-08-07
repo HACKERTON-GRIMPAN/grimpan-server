@@ -1,6 +1,6 @@
 package com.grimpan.emodiary.security.jwt;
 
-import com.grimpan.emodiary.domain.type.UserRole;
+import com.grimpan.emodiary.type.EUserRole;
 import com.grimpan.emodiary.repository.UserRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -23,7 +23,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JwtProvider implements InitializingBean {
     private final UserRepository userRepository;
-    @Value("${jwt.secret: abc}")
+    @Value("${jwt.secret}")
     private String secretKey;
     private Key key;
     private static final Long accessExpiredMs = 60 * 60 * 2 * 1000l;
@@ -38,7 +38,7 @@ public class JwtProvider implements InitializingBean {
     /**
      * token 생성
      */
-    private String createToken(Long id, UserRole userRoleType, boolean isAccess) {
+    private String createToken(Long id, EUserRole userRoleType, boolean isAccess) {
         Claims claims = Jwts.claims();
 
         claims.put("id", id);
@@ -58,7 +58,7 @@ public class JwtProvider implements InitializingBean {
     /**
      * accessToken, refreshToken 생성
      */
-    public Map<String, String> createTotalToken(Long id, UserRole role) {
+    public Map<String, String> createTotalToken(Long id, EUserRole role) {
         Map<String, String> map = new HashMap<>();
         map.put("access_token", createToken(id, role, true));
         map.put("refresh_token", createToken(id, role, false));

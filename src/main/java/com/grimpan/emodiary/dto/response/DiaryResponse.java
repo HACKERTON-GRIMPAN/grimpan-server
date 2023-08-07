@@ -1,4 +1,4 @@
-package com.grimpan.emodiary.dto;
+package com.grimpan.emodiary.dto.response;
 
 import com.grimpan.emodiary.domain.Diary;
 import lombok.AllArgsConstructor;

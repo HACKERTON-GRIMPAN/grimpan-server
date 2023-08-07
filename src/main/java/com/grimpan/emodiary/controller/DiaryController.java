@@ -1,21 +1,8 @@
 package com.grimpan.emodiary.controller;
 
-import com.grimpan.emodiary.dto.DiaryResponse;
-import com.grimpan.emodiary.dto.DiaryWriteRequest;
-import com.grimpan.emodiary.dto.DiaryWriteResponse;
-import com.grimpan.emodiary.dto.ImageChooseRequest;
-import com.grimpan.emodiary.service.DiaryService;
 import io.swagger.annotations.Api;
-import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 
 @Api(tags = "일기 API")

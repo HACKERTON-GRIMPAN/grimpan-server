@@ -2,7 +2,10 @@ package com.grimpan.emodiary.unit;
 
 import com.nimbusds.jose.shaded.gson.JsonArray;
 import com.nimbusds.jose.shaded.gson.JsonParser;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -122,5 +125,12 @@ public class DiaryUnit {
 
         JsonArray choices = (JsonArray) JsonParser.parseString(Objects.requireNonNull(response.getBody())).getAsJsonObject().get("choices");
         return (long) choices.get(0).getAsJsonObject().get("message").getAsJsonObject().get("content").getAsInt();
+    }
+
+    @Getter
+    @Builder
+    private static class ChatGPTQuery {
+        private String role;
+        private String content;
     }
 }

@@ -1,18 +1,17 @@
 package com.grimpan.emodiary.exception;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@AllArgsConstructor
 @Getter
-public class DiaryException extends RuntimeException{
-    private ErrorCode errorCode;
-    private String message;
+public class DiaryException extends RuntimeException {
+    private final ErrorCode errorCode;
+    private final String message;
 
     public DiaryException(ErrorCode errorCode) {
         this.errorCode = errorCode;
         this.message = null;
     }
+
     @Override
     public String getMessage() {
         if (message == null) {

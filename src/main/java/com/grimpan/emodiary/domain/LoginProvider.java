@@ -1,6 +1,6 @@
 package com.grimpan.emodiary.domain;
 
-import com.grimpan.emodiary.domain.type.AuthenticationProvider;
+import com.grimpan.emodiary.type.ELoginProvider;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,10 +25,10 @@ public class LoginProvider {
 
     @Column(name = "provider")
     @Enumerated(EnumType.STRING)
-    private AuthenticationProvider provider;
+    private ELoginProvider provider;
 
     @Builder
-    public LoginProvider(User user, String socialId, AuthenticationProvider provider) {
+    public LoginProvider(User user, String socialId, ELoginProvider provider) {
         this.user = user;
         this.socialId = socialId;
         this.provider = provider;

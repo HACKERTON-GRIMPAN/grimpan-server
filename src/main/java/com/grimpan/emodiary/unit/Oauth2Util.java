@@ -1,8 +1,8 @@
 package com.grimpan.emodiary.unit;
 
-import com.grimpan.emodiary.domain.type.AuthenticationProvider;
+import com.grimpan.emodiary.exception.CommonException;
+import com.grimpan.emodiary.type.ELoginProvider;
 import com.grimpan.emodiary.exception.ErrorCode;
-import com.grimpan.emodiary.exception.UserException;
 import com.nimbusds.jose.shaded.gson.JsonElement;
 import com.nimbusds.jose.shaded.gson.JsonParser;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +45,7 @@ public class Oauth2Util {
     /* WebClient 방식으로 Upgrade 예정 */
     private final static RestTemplate restTemplate = new RestTemplate();
 
-    public String getSocialId(String authorizationStr, AuthenticationProvider provider) {
+    public String getSocialId(String authorizationStr, ELoginProvider provider) {
         String socialId = null;
         switch (provider) {
             case KAKAO -> {
@@ -60,7 +60,7 @@ public class Oauth2Util {
         }
 
         // 소셜 서버에 User Data 존재 여부 확인
-        if (socialId == null) { throw new UserException(ErrorCode.NOT_FOUND_USER); }
+        if (socialId == null) { throw new CommonException(ErrorCode.NOT_FOUND_USER, null); }
 
         return socialId;
     }
