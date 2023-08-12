@@ -1,11 +1,14 @@
 package com.grimpan.emodiary.service;
 
 import com.grimpan.emodiary.domain.Diary;
+import com.grimpan.emodiary.domain.User;
 import com.grimpan.emodiary.dto.request.*;
 import com.grimpan.emodiary.dto.response.*;
+import com.grimpan.emodiary.exception.CommonException;
 import com.grimpan.emodiary.exception.DiaryException;
 import com.grimpan.emodiary.exception.ErrorCode;
 import com.grimpan.emodiary.repository.DiaryRepository;
+import com.grimpan.emodiary.repository.UserRepository;
 import com.grimpan.emodiary.unit.DiaryUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,33 +33,34 @@ import java.util.List;
 @Slf4j
 @Service
 public class DiaryService {
-//    @Value("${spring.image.path}")
-//    private String imagePath;
-//    @Value("${spring.url.path}")
-//    private String urlPath;
-//    private final DiaryRepository diaryRepository;
-//    private final DiaryUnit diaryUnit;
-//
-//    @Transactional
-//    public DiaryWriteResponse create(DiaryWriteRequest request) throws IOException {
-//        String keywords = diaryUnit.getTokenByDiary(request.getContent());
-//        List<String> imgNameList = diaryUnit.getImgNameList(keywords);
-//
-//        Diary diary = diaryRepository.save(Diary.builder()
-//                .title(request.getTitle())
-//                .content(request.getContent())
-//                .keywords(keywords)
-//                .emotionScore(diaryUnit.getEmotionScore(request.getContent())).build());
-//        return new DiaryWriteResponse(diary.getId(), ImageToUrl(imgNameList));
-//    }
-//
-//    public List<String> ImageToUrl(List<String> imgNameList) throws IOException {
-//        List<String> imageResponses = new ArrayList<>();
-//        for(String imgName : imgNameList){
-//            imageResponses.add(urlPath + "diary/images?uuid=" + imgName);
-//        }
-//        return imageResponses;
-//    }
+    @Value("${spring.image.path}")
+    private String imagePath;
+
+    private final DiaryRepository diaryRepository;
+    private final UserRepository userRepository;
+    private final DiaryUnit diaryUnit;
+
+    @Transactional
+    public DiaryWriteResponse create(DiaryWriteRequest request, Long userId) throws IOException {
+        //일기 내용 바탕으로 키워드 추출 후 이미지 4개 생성
+        List<String> imgUrlList = diaryUnit.createImgUrlList(request.getContent());
+        //일기 내용 바탕으로 감정 분석 (0~100, 단위 : %)
+        int emotionScore = diaryUnit.getEmotionScore(request.getContent());
+
+        //로그인 유저 존재하는지 확인
+        User user = userRepository.findById(userId).orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER, null));
+
+        Diary diary = diaryRepository.save(Diary.builder()
+                .title(request.getTitle())
+                .content(request.getContent())
+                .user(user)
+                .emotionScore(emotionScore)
+                .build());
+
+        return new DiaryWriteResponse(diary.getId(), imgUrlList);
+    }
+
+
 //
 //    public DiaryResponse getOneDiary(Long id) {
 //        Diary diary = diaryRepository.findById(id).orElseThrow(() -> new DiaryException(ErrorCode.DIARY_NOT_FOUND));

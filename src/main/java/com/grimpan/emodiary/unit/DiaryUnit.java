@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.*;
 
 @Slf4j
@@ -31,9 +32,24 @@ public class DiaryUnit {
     @Value("${karlo.key}")
     private String KARLO_KEY;
 
+    @Value("${spring.url.path}")
+    private String urlPath;
+
     private static final RestTemplate restTemplate = new RestTemplate();
     private static final HttpHeaders headers = new HttpHeaders();
     private static final JSONObject body = new JSONObject();
+
+    public List<String> createImgUrlList(String content) throws IOException {
+        String keywords = getTokenByDiary(content);
+        return ImageToUrl(getImgNameList(keywords));
+    }
+    public List<String> ImageToUrl(List<String> imgNameList) throws IOException {
+        List<String> imageResponses = new ArrayList<>();
+        for(String imgName : imgNameList){
+            imageResponses.add(urlPath + "diary/images?uuid=" + imgName);
+        }
+        return imageResponses;
+    }
 
     public String getTokenByDiary(String content) {
         headers.clear();
@@ -98,7 +114,7 @@ public class DiaryUnit {
         return imgNames;
     }
 
-    public Long getEmotionScore(String content) {
+    public int getEmotionScore(String content) {
         headers.clear();
         headers.add("Content-type","application/json; charset=utf-8");
         headers.add("Authorization", "Bearer "+ GPT_KEY);
@@ -124,8 +140,9 @@ public class DiaryUnit {
         );
 
         JsonArray choices = (JsonArray) JsonParser.parseString(Objects.requireNonNull(response.getBody())).getAsJsonObject().get("choices");
-        return (long) choices.get(0).getAsJsonObject().get("message").getAsJsonObject().get("content").getAsInt();
+        return (int) choices.get(0).getAsJsonObject().get("message").getAsJsonObject().get("content").getAsInt();
     }
+
 
     @Getter
     @Builder
