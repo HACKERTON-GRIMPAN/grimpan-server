@@ -10,6 +10,7 @@ version = '0.0.1-SNAPSHOT'
 java {
     sourceCompatibility = '17'
 }
+
 configurations.all {
     resolutionStrategy {
         eachDependency { details ->
@@ -20,6 +21,7 @@ configurations.all {
         }
     }
 }
+
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
@@ -62,6 +64,10 @@ dependencies {
 
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+jar {
+    enabled = false
 }
 
 processResources.dependsOn('copyGitSubmodule')
