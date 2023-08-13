@@ -64,6 +64,13 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
+processResources.dependsOn('copyGitSubmodule')
+
+tasks.register('copyGitSubmodule', Copy) {
+    from('./properties/was')
+    into('./src/main/resources')
+}
+
 tasks.named('test') {
     useJUnitPlatform()
 }
