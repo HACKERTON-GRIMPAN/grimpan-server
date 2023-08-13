@@ -1,6 +1,7 @@
 package com.grimpan.emodiary.controller;
 
 import com.grimpan.emodiary.dto.request.DiaryWriteRequest;
+import com.grimpan.emodiary.dto.response.DiaryResponse;
 import com.grimpan.emodiary.dto.response.DiaryWriteResponse;
 import com.grimpan.emodiary.dto.response.ResponseDto;
 import com.grimpan.emodiary.service.DiaryService;
@@ -11,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.Map;
 
 
 @Api(tags = "일기 API")
@@ -26,13 +26,12 @@ public class DiaryController {
     public ResponseDto<DiaryWriteResponse> createDiary(HttpServletRequest servletRequest, @RequestBody DiaryWriteRequest request) throws IOException {
         return ResponseDto.ok(diaryService.create(request, (Long)servletRequest.getAttribute("USER_ID")));
     }
-////
-////    @Operation(summary = "일기 상세 조회", description = "id로 일기 상세 조회")
-////    @GetMapping(value = "/{id}")
-////    public ResponseEntity<DiaryResponse> getOneDiary(@PathVariable Long id) {
-////        DiaryResponse response = diaryService.getOneDiary(id);
-////        return ResponseEntity.ok().body(response);
-////    }
+
+    @Operation(summary = "일기 상세 조회", description = "id로 일기 상세 조회")
+    @GetMapping(value = "/{id}")
+    public ResponseDto<DiaryResponse> getOneDiary(@PathVariable Long id, HttpServletRequest servletRequest) {
+        return ResponseDto.ok(diaryService.getOneDiary(id, (Long)servletRequest.getAttribute("USER_ID")));
+    }
 ////
 ////    @Operation(summary = "이미지 선택", description = "4개의 이미지 중 사용자가 선택한 이미지만 남기기")
 ////    @PutMapping(value = "/{id}/images")

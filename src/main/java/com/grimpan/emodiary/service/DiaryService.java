@@ -61,11 +61,14 @@ public class DiaryService {
     }
 
 
-//
-//    public DiaryResponse getOneDiary(Long id) {
-//        Diary diary = diaryRepository.findById(id).orElseThrow(() -> new DiaryException(ErrorCode.DIARY_NOT_FOUND));
-//        return DiaryResponse.of(diary);
-//    }
+    @Transactional(readOnly = true)
+    public DiaryResponse getOneDiary(Long id, Long userId) {
+        Diary diary = diaryRepository.findById(id).orElseThrow(() -> new DiaryException(ErrorCode.DIARY_NOT_FOUND));
+        if(!diary.getUser().getId().equals(userId)){
+            throw new CommonException(ErrorCode.ACCESS_DENIED_ERROR, "해당 일기 작성자가 아닙니다.");
+        }
+        return DiaryResponse.of(diary);
+    }
 //
 //    @Transactional
 //    public DiaryResponse chooseImage(Long id, List<ImageChooseRequest> requestList) {
