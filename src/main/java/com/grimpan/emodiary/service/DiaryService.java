@@ -10,6 +10,7 @@ import com.grimpan.emodiary.exception.ErrorCode;
 import com.grimpan.emodiary.repository.DiaryRepository;
 import com.grimpan.emodiary.repository.UserRepository;
 import com.grimpan.emodiary.unit.DiaryUnit;
+import com.grimpan.emodiary.unit.ImageUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +41,7 @@ public class DiaryService {
     private final DiaryRepository diaryRepository;
     private final UserRepository userRepository;
     private final DiaryUnit diaryUnit;
+    private final ImageUtil imageUtil;
 
     @Transactional
     public DiaryWriteResponse create(DiaryWriteRequest request, Long userId) throws IOException {
@@ -116,18 +118,29 @@ public class DiaryService {
 //
 
     @Transactional
-    public List<Map<String, String>> getImageListByDateRange(String startDate, String endDate, Long userId) {
+    public List<Map.Entry<String, String>> getImageListByDateRange(String startDate, String endDate, Long userId) {
         //구간 내 diary 추출
         List<Diary> diaryList = diaryRepository.findByUserIdAndBetweenCreatedAt(startDate, endDate, userId);
+
+        // startDate부터 endDate까지의 모든 날짜를 순회 >> Default 값 세팅
+        LocalDate start = LocalDate.parse(startDate, DateTimeFormatter.ISO_DATE);
+        LocalDate end = LocalDate.parse(endDate, DateTimeFormatter.ISO_DATE);
+        Map<String, String> imageMap = new HashMap<>();
+        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+            imageMap.put(date.toString(), "");
+        }
+
         // diary id에 해당하는 image추출
-        List<Map<String, String>> responses = new ArrayList<>();
         for (Diary diary : diaryList) {
-            Map<String, String> imageMap = new HashMap<>();
             String date = diary.getCreatedAt().toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             // image base64로 리턴
-            String image = "";
-            imageMap.put(date, image);
+            String path = imagePath + diary.getImage().getUuidName();
+            String imageBase64 = imageUtil.encoder(path);
+
+            imageMap.put(date, imageMap.getOrDefault(date,imageBase64));
         }
+
+        List<Map.Entry<String, String>> responses = new ArrayList<>(imageMap.entrySet());
         return responses;
     }
 //

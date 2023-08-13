@@ -38,7 +38,7 @@ public class DiaryController {
     @Operation(summary = "월단위 일기 조회", description = "구간에 해당하는 이미지 List 보여주기")
     @GetMapping(value = "/monthly")
     public ResponseDto<?> getImageListForMonth(HttpServletRequest servletRequest, @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate){
-        List<Map<String, String>> diaryMap = diaryService.getImageListByDateRange(startDate, endDate, (Long)servletRequest.getAttribute("USER_ID"));
+        List<Map.Entry<String, String>> diaryMap = diaryService.getImageListByDateRange(startDate, endDate, (Long)servletRequest.getAttribute("USER_ID"));
         return ResponseDto.ok(diaryMap);
     }
 ////
