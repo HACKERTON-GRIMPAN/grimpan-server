@@ -15,6 +15,7 @@ public enum ErrorCode {
 
     // Server
     SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "내부 서버 문제입니다."),
+    FILE_IO_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "파일 입출력 에러입니다."),
 
     // Bad Request Error
     NOT_EXIST_PARAM(HttpStatus.BAD_REQUEST, "요청에 필요한 데이터가 없습니다."),
