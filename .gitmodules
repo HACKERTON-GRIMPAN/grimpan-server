@@ -1,0 +1,4 @@
+[submodule "properties"]
+	path = properties
+	url = https://github.com/HACKERTON-GRIMPAN/properties.git
+	branch = main
