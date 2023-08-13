@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 
 @Api(tags = "일기 API")
@@ -31,6 +33,13 @@ public class DiaryController {
     @GetMapping(value = "/{id}")
     public ResponseDto<DiaryResponse> getOneDiary(@PathVariable Long id, HttpServletRequest servletRequest) {
         return ResponseDto.ok(diaryService.getOneDiary(id, (Long)servletRequest.getAttribute("USER_ID")));
+    }
+
+    @Operation(summary = "월단위 일기 조회", description = "구간에 해당하는 이미지 List 보여주기")
+    @GetMapping(value = "/monthly")
+    public ResponseDto<?> getImageListForMonth(HttpServletRequest servletRequest, @RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate){
+        List<Map<String, String>> diaryMap = diaryService.getImageListByDateRange(startDate, endDate, (Long)servletRequest.getAttribute("USER_ID"));
+        return ResponseDto.ok(diaryMap);
     }
 ////
 ////    @Operation(summary = "이미지 선택", description = "4개의 이미지 중 사용자가 선택한 이미지만 남기기")
@@ -54,12 +63,6 @@ public class DiaryController {
 ////                    .body(imageData);
 ////    }
 ////
-////    @Operation(summary = "이미지 해당 달 조회", description = "현재 달에 해당하는 이미지 List 보여주기")
-////    @GetMapping(value = "/imageMonth")
-////    public ResponseEntity<?> getImageListForMonth() throws IOException {
-////        List<Map<Integer, DiaryResponse>> diaryMap = diaryService.getImageListByMonth();
-////        return ResponseEntity.ok().body(diaryMap);
-////    }
 ////
 ////    @Operation(summary = "해당 주 감정 점수 조회", description = "현재 주에 해당하는 감정 점수 보여주기")
 ////    @GetMapping(value = "/scoreWeek")
