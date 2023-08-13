@@ -3,6 +3,7 @@ package com.grimpan.emodiary.controller;
 import com.grimpan.emodiary.dto.request.DiaryWriteRequest;
 import com.grimpan.emodiary.dto.response.DiaryResponse;
 import com.grimpan.emodiary.dto.response.DiaryWriteResponse;
+import com.grimpan.emodiary.dto.response.EmotionResponse;
 import com.grimpan.emodiary.dto.response.ResponseDto;
 import com.grimpan.emodiary.service.DiaryService;
 import io.swagger.annotations.Api;
@@ -41,6 +42,12 @@ public class DiaryController {
         List<Map.Entry<String, String>> diaryMap = diaryService.getImageListByDateRange(startDate, endDate, (Long)servletRequest.getAttribute("USER_ID"));
         return ResponseDto.ok(diaryMap);
     }
+
+    @Operation(summary = "월 감정 정보 조회", description = "해당 월의 일별 감정점수와 감정분포 조회")
+    @GetMapping(value = "/emotionInfo/monthly")
+    public ResponseDto<EmotionResponse> getEmotionInfotForMonthly(@RequestParam("date") String date,HttpServletRequest servletRequest) {
+        return ResponseDto.ok(diaryService.getEmotionInfoForMonthly(date,(Long)servletRequest.getAttribute("USER_ID")));
+    }
 ////
 ////    @Operation(summary = "이미지 선택", description = "4개의 이미지 중 사용자가 선택한 이미지만 남기기")
 ////    @PutMapping(value = "/{id}/images")
@@ -64,10 +71,5 @@ public class DiaryController {
 ////    }
 ////
 ////
-////    @Operation(summary = "해당 주 감정 점수 조회", description = "현재 주에 해당하는 감정 점수 보여주기")
-////    @GetMapping(value = "/scoreWeek")
-////    public ResponseEntity<?> getScoreListForWeek() throws IOException {
-////        List<Map<Integer, Integer>> diaryMap = diaryService.getScoreListForWeek();
-////        return ResponseEntity.ok().body(diaryMap);
-////    }
+
 }

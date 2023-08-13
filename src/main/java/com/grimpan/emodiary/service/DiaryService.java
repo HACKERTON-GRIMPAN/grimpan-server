@@ -11,6 +11,7 @@ import com.grimpan.emodiary.repository.DiaryRepository;
 import com.grimpan.emodiary.repository.UserRepository;
 import com.grimpan.emodiary.unit.DiaryUnit;
 import com.grimpan.emodiary.unit.ImageUtil;
+import io.swagger.models.auth.In;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +31,8 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -63,14 +66,94 @@ public class DiaryService {
         return new DiaryWriteResponse(diary.getId(), imgUrlList);
     }
 
-
     @Transactional(readOnly = true)
     public DiaryResponse getOneDiary(Long id, Long userId) {
         Diary diary = diaryRepository.findById(id).orElseThrow(() -> new DiaryException(ErrorCode.DIARY_NOT_FOUND));
-        if(!diary.getUser().getId().equals(userId)){
+        if (!diary.getUser().getId().equals(userId)) {
             throw new CommonException(ErrorCode.ACCESS_DENIED_ERROR, "해당 일기 작성자가 아닙니다.");
         }
         return DiaryResponse.of(diary);
+    }
+
+    @Transactional
+    public List<Map.Entry<String, String>> getImageListByDateRange(String startDate, String endDate, Long userId) {
+        //구간 내 diary 추출
+        List<Diary> diaryList = diaryRepository.findByUserIdAndBetweenCreatedAt(startDate, endDate, userId);
+
+        // startDate부터 endDate까지의 모든 날짜를 순회 >> Default 값 세팅
+        LocalDate start = LocalDate.parse(startDate, DateTimeFormatter.ISO_DATE);
+        LocalDate end = LocalDate.parse(endDate, DateTimeFormatter.ISO_DATE);
+        Map<String, String> imageMap = new HashMap<>();
+        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+            imageMap.put(date.toString(), "");
+        }
+
+        // diary id에 해당하는 image추출
+        for (Diary diary : diaryList) {
+            String date = diary.getCreatedAt().toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            // image base64로 리턴
+            String path = imagePath + diary.getImage().getUuidName();
+            String imageBase64 = imageUtil.encoder(path);
+
+            imageMap.put(date, imageMap.getOrDefault(date, imageBase64));
+        }
+
+        List<Map.Entry<String, String>> responses = new ArrayList<>(imageMap.entrySet());
+        return responses;
+    }
+
+    @Transactional
+    public EmotionResponse getEmotionInfoForMonthly(String date, Long userId) {
+        String userName = userRepository.findById(userId).orElseThrow(() -> new CommonException(ErrorCode.NOT_FOUND_USER, null)).getName();
+        //월 일자별 감정 점수
+        List<String> formattedDates = getStartDateAndEndDateFromYearMonth(date);
+        int lastDay = Integer.parseInt(formattedDates.get(1).substring(8,10));
+        List<Diary> diaryList = diaryRepository.findByUserIdAndBetweenCreatedAt(formattedDates.get(0), formattedDates.get(1), userId);
+        List<Integer> emotionScore = Arrays.stream(new int[lastDay])
+                .boxed()
+                .collect(Collectors.toList());
+
+        for(Diary diary : diaryList){
+            emotionScore.set(diary.getCreatedAt().toLocalDateTime().getDayOfMonth() -1, diary.getEmotionScore());
+        }
+
+        //감정 분포(Good(70~100), Soso(31~69), Bad(0~30))
+        double[] emotionDistribution = new double[3];
+
+        for(int score : emotionScore) {
+            if (score >= 70 && score <= 100) {
+                emotionDistribution[0]++;
+            } else if (score >= 31 && score <= 69) {
+                emotionDistribution[1]++;
+            } else {
+                emotionDistribution[2]++;
+            }
+        }
+        for(int i = 0; i < 3; i++){
+            emotionDistribution[i] = Math.round(emotionDistribution[i]/lastDay*100);
+        }
+        List<Double> emotionDistributionList = Arrays.stream(emotionDistribution)
+                .boxed()
+                .collect(Collectors.toList());
+
+        return new EmotionResponse(userName, emotionScore, emotionDistributionList);
+    }
+
+    private List<String> getStartDateAndEndDateFromYearMonth(String date) {
+        YearMonth yearMonth = YearMonth.parse(date);
+        // 해당 연월의 시작일과 끝일 계산
+        LocalDate start = yearMonth.atDay(1);
+        LocalDate end = yearMonth.atEndOfMonth();
+        // "YYYY-MM-DD" 형식으로 포맷팅
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String startDate = start.format(formatter);
+        String endDate = end.format(formatter);
+
+        List<String> formattedDates = new ArrayList<>();
+        formattedDates.add(startDate);
+        formattedDates.add(endDate);
+
+        return formattedDates;
     }
 //
 //    @Transactional
@@ -117,32 +200,7 @@ public class DiaryService {
 //    }
 //
 
-    @Transactional
-    public List<Map.Entry<String, String>> getImageListByDateRange(String startDate, String endDate, Long userId) {
-        //구간 내 diary 추출
-        List<Diary> diaryList = diaryRepository.findByUserIdAndBetweenCreatedAt(startDate, endDate, userId);
 
-        // startDate부터 endDate까지의 모든 날짜를 순회 >> Default 값 세팅
-        LocalDate start = LocalDate.parse(startDate, DateTimeFormatter.ISO_DATE);
-        LocalDate end = LocalDate.parse(endDate, DateTimeFormatter.ISO_DATE);
-        Map<String, String> imageMap = new HashMap<>();
-        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-            imageMap.put(date.toString(), "");
-        }
-
-        // diary id에 해당하는 image추출
-        for (Diary diary : diaryList) {
-            String date = diary.getCreatedAt().toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            // image base64로 리턴
-            String path = imagePath + diary.getImage().getUuidName();
-            String imageBase64 = imageUtil.encoder(path);
-
-            imageMap.put(date, imageMap.getOrDefault(date,imageBase64));
-        }
-
-        List<Map.Entry<String, String>> responses = new ArrayList<>(imageMap.entrySet());
-        return responses;
-    }
 //
 //    public List<Map<Integer, Integer>> getScoreListForWeek() {
 //        LocalDate currentDate = LocalDate.now();
